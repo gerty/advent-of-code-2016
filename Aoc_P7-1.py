@@ -1,10 +1,8 @@
 # Code written by @gerty
 
-# Input from Day 6, Problem 1 & 2 of Advent of Code 2016
+# Input from Day 7, Problem 1 of Advent of Code 2016
 # Input files in same directory
-# My input: in file D6input.txt
-
-import collections, string, re
+# My input: in file D7input.txt
 
 answer = 0
 

@@ -13,22 +13,38 @@ with open('Day9input.txt', 'r') as f:
 def decompress(inputstring):
     instring = inputstring  # <-- our input string, but in a local variable so we can do with it what we want
     decompstring = ''       # <-- final decompressed string we build up as the answer
+
     codes = ''             # <-- the tiny string of data inside the '()'
-    sniplength = 0         # <-- tracks the length of string to be snipped for copying
-    numcopies = 0          # <-- tracks the number of copies of the copystring needed
+    snip = 0         # <-- tracks the length of string to be snipped for copying
+    copies = 0          # <-- tracks the number of copies of the copystring needed
     copystring = ''        # <-- the shorter string we load up for copying per the values in '()'
-    index = 0
-    while len(instring) > 0:
-        decompstring += instring.split('(')[0]  # simply transfer the string until reaching a '('
-        codes = instring.split('()')[1]  # should return us something like '3x2', '1x40', or '0x34' ** out of range **
-        sniplength = int(codes.split('x')[0])  # the length of the copystring is the first number
-        numcopies = int(codes.split('x')[1])   # the number of chars in the copystring is the second number
-        copystring = instring.split(')')[1][0:sniplength]  # create the copystring ** removing later-appearing ()s!! **
-        for i in range(numcopies):         # copy the sniplength-long copystring numcopies times
+
+    if '(' in instring:
+        decompstring += instring.split('(', 1)[0]  # copy chars exact until reaching a '(', then stop
+    if '(' in instring:
+        instring = instring.split('(', 1)[1]  # remove the easily transferred parts and reassign the rest to instring
+
+    while len(instring) > 0:                    # always start here with a code ready without '(', or empty string
+        codes = instring.split(')',1)[0]  # should return us something like '3x2', '1x40', or '0x34'
+        print(codes)
+        snip = int(codes.split('x')[0])  # the length of the copystring is the first number
+        copies = int(codes.split('x')[1])   # the number of chars in the copystring is the second number
+        copystring = instring.split(')',1)[1][0:snip]  # create the copystring
+        for i in range(copies):         # copy the sniplength-long copystring numcopies times
             decompstring += copystring
-        instring = ''.join(instring.split(')')[1:])  # remove the codes from instring ** but not all of them!! **
+        instring = instring.split(')',1)[1]  # remove codes from instring
         instring = instring[len(copystring):]   # also take away the chars that made up the copystring
-    return(tempstring1)   # when instring is empty, return the answer
+        if '(' in instring:
+            decompstring += instring.split('(', 1)[0]  # copy chars exact until reaching a '(', then stop
+        else:
+            decompstring += instring   # if there are no codes left, dump the rest and empty instring
+            instring = ''
+        if '(' in instring:
+            instring = instring.split('(', 1)[1]  # remove the easily transferred parts, reassign the rest to instring
+    return(decompstring)   # when instring is empty, return the answer
 
 uncompdata = decompress(rawdata[0])
-print(uncompdata)
+print(len(uncompdata))
+
+# My first, unrealistic-looking guess was 107036. Wrong and too high.
+# The next result was much more reasonable: 107035. Correct!

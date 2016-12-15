@@ -30,9 +30,8 @@ def decompress(inputstring):
             sniplen = int(codes.split('x')[0])  # the length of the copystring is the first number
             copies = int(codes.split('x')[1])   # the number of chars in the copystring is the second number
             copystring = instring.split(')', 1)[1][0:sniplen]  # create the copystring
-            print(copystring)
             for i in range(copies):         # copy the sniplength-long copystring numcopies times
-                decompstring += (copystring) # Could it be that I only need to change ONE LINE for part 2???
+                decompstring += decompress(copystring) # Could it be that I only need to change ONE LINE for part 2???
             instring = instring.split(')', 1)[1]  # remove codes from instring
             instring = instring[len(copystring):]   # also take away the chars that made up the copystring
 
@@ -43,11 +42,15 @@ def decompress(inputstring):
             instring = ''
     return decompstring   # when instring is empty, return the answer
 
-with open('Day9input.txt', 'r') as f:
-    rawdata = f.readlines()
+with open('D9test', 'r') as f:
+    rawdata = str(f.read())  # ALERT!! Using "readlines" here adds a character, presuming EOL, making file act up
 
 uncompdata = decompress(rawdata)
 print(len(uncompdata))
 
 # My first, unrealistic-looking guess was 107036. Wrong and too high.
 # The next result was much more reasonable: 107035. Correct!
+
+# For part two, I first thought that I could just recursively find the decompressed string by changing one line, as
+# one can read in my excitement around line 34. Will next attempt to change code to only count and not save the string.
+# I mean, what do we do with it anyways? Nothing.

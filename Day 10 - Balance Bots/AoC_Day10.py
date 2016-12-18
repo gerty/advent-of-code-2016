@@ -8,37 +8,48 @@ class Bot:
     """Common robot with high/low destination tracking"""
 
     def __init__(self):
-        self.chips = []          # nums is a list of the chips that a Bot has
+        self.chiplow = 0        # these slots hold the number of the chip, 0 if empty
+        self.chiphigh = 0
         self.lowgive = 0        # the lesser of two chips will be given to this numbered bot next
         self.highgive = 0       # the greater of two chips will be given to this numbered bot next
 
     def assigntasks(self, low, high):
-        self.lowgive = low
-        self.highgive = high
+        self.lowgive = int(low)
+        self.highgive = int(high)
         return
 
-    def take(self, chip):
-        self.chips.append(chip)      #  put the new arrival at the end of the list
-        self.chips = self.chips.sort()            #  then sort the list so the high number is always at the end
-        return
+    def give(self, chipnum):   # horribly inefficient way to track chips, but tuples and sort() weren't working :/
+        if self.chiplow == 0 and self.chiphigh > 0:   # One chip only
+            self.chiplow = chipnum
+        if self.chiphigh == 0:  # Empty bot if high chip is zero
+            self.chiphigh = chipnum
+        if self.chiplow > self.chiphigh:  # after assigning, check for low and high in order
+            tempchip = self.chiphigh
+            self.chiphigh = self.chiplow
+            self.chiplow = tempchip
+        return True
 
     def compare(self):
-        if len(self.chips) > 1:
-            return[self.chips.pop(), self.highgive,          #  Pop the high number and its destination
-                   self.chips.pop(), self.lowgive]           #  then pop the low number and where it goes
-            # we will be left with an empty list of nums now, if always at most 2 are in list
+        if self.chiplow > 0 and self.chiphigh > 0:   # full of chips
+            temphigh = self.chiphigh
+            templow = self.chiplow
+
+            self.chiphigh = 0
+            self.chiplow = 0
+
+            return [temphigh, self.highgive,
+                    templow, self.lowgive]
         else:
             return[]
 
     def isfull(self):
-        if len(self.chips) == 2:
-            print("TRUE", self.chips)
+        if (self.chiplow != 0) and (self.chiphigh != 0):  # full of chips
             return True
         else:
             return False
 
     def printme(self):
-        print("For", self.chips, "low goes to", self.lowgive, "and high goes to", self.highgive)
+        print(self.chiplow, "goes to", self.lowgive, "and", self.chiphigh, "goes to", self.highgive)
 
 answer = False
 fleet = []
@@ -50,33 +61,35 @@ with open('Day10input.txt', 'r') as f:
 
 for line in filedata:
     parsed = line.split()     # (e.g. "value 31 goes to bot 114" or "bot 182 gives low to bot 49 and high to bot 176")
-    if parsed[0] == 'value':    # then parsed[5] is the bot, and parsed[1] is the chip
-        fleet[int(parsed[5])].take(int(parsed[1]))   # bot takes the chip
-        print("Bot", parsed[5], "took", parsed[1])
-    if parsed[0] == 'bot':     # then parsed[1] is the bot, parsed[6] is low assignment, and parsed[11] is high
+
+    if parsed[0] == 'value':    # parsed[5] is the bot, and parsed[1] is the chip
+        fleet[int(parsed[5])].give(int(parsed[1]))   # bot takes the chip
+
+    if parsed[0] == 'bot':     # parsed[1] is the bot, parsed[6] is low assignment, and parsed[11] is high
         destinationlow = int(parsed[6])
         destinationhigh = int(parsed[11])
-        if parsed[5] == 'output':                           # Capturing outputs as a value greater than 500
-            destinationlow += 300
-        if parsed[10] == 'output':                          # Capturing outputs as a value greater than 500
-            destinationhigh += 300
+        if parsed[5] == 'output':
+            destinationlow += 300        # Capturing outputs as a value greater than 300
+        if parsed[10] == 'output':
+            destinationhigh += 300       # Capturing outputs as a value greater than 300
         fleet[int(parsed[1])].assigntasks(destinationlow, destinationhigh)  # Make assignment to the bot
-        print("Bot", parsed[1], "will send low to", destinationlow, "and high to", destinationhigh)
 
 while answer == False:
-    for i in range(600):               # Keeping a range of 1000 spots - outputs are 500 and above
+    for i in range(600):               # Keeping a range of 600 spots - outputs are 300 and above
         if fleet[i].isfull():
-            local = fleet[i].compare()  # local captures two chips if there is a chip that moves
-            print('FULL: ', local)
-            fleet[local[0]].take(local[1])  # This line gives the high number to its particular taker
-            fleet[local[0]].printme()
-            fleet[local[2]].take(local[3])  # This line gives the low number to its particular taker
-            fleet[local[2]].printme()
-            print(local[1], "to", local[0])
-            print(local[3], "to", local[2])
-            if (local[0] == 17) and (local[2] == 61):
+            local = fleet[i].compare()  # local looks at these two chips
+            print(i, "is FULL:", local)
+            fleet[local[1]].give(local[0])  # This line gives the high number to its particular taker
+            fleet[local[3]].give(local[2])  # This line gives the low number to its particular taker
+            print("Value", local[0], "to", local[1])
+            print('Value', local[2], "to", local[3])
+            if (int(local[0]) == 61) and (int(local[2]) == 17):
                 print('The winner is: Robot ', i)
                 answer = True
 for x in range(600):
     if fleet[x].isfull():
+        print(x)
         fleet[x].printme()
+
+# After much coding and re-coding, I found that my search criteria was swapping high and low
+# First try was a success. Robot 47 was the winner.

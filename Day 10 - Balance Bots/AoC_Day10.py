@@ -74,7 +74,7 @@ for line in filedata:
             destinationhigh += 300       # Capturing outputs as a value greater than 300
         fleet[int(parsed[1])].assigntasks(destinationlow, destinationhigh)  # Make assignment to the bot
 
-while answer == False:
+while not answer:
     for i in range(600):               # Keeping a range of 600 spots - outputs are 300 and above
         if fleet[i].isfull():
             local = fleet[i].compare()  # local looks at these two chips
@@ -83,13 +83,18 @@ while answer == False:
             fleet[local[3]].give(local[2])  # This line gives the low number to its particular taker
             print("Value", local[0], "to", local[1])
             print('Value', local[2], "to", local[3])
-            if (int(local[0]) == 61) and (int(local[2]) == 17):
-                print('The winner is: Robot ', i)
-                answer = True
-for x in range(600):
-    if fleet[x].isfull():
-        print(x)
-        fleet[x].printme()
+            # Part 2:
+            if __name__ == '__main__':
+                if (fleet[300].chiplow != 0) and (fleet[301].chiplow != 0) and (fleet[300].chiplow != 0):
+                    print('The outputs are:')
+                    print("Output 0 =", fleet[300].chiplow)
+                    print("Output 1 =", fleet[301].chiplow)
+                    print("Output 2 =", fleet[302].chiplow)
+                    print("Output0 x Output1 x Output2 =", fleet[300].chiphigh * fleet[301].chiphigh * fleet[302].chiphigh)
+                    answer = True
 
-# After much coding and re-coding, I found that my search criteria was swapping high and low
-# First try was a success. Robot 47 was the winner.
+    # After much coding and re-coding, I found that my search criteria was swapping high and low
+    # First try was a success. Robot 47 was the winner.
+
+    # For art two I'm trying to search the output: 300=2, 301=43, 302=31
+    # Makes for an answer of 2666. At least I used the python console to do the math

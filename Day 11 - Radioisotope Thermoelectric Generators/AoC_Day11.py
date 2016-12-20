@@ -55,16 +55,16 @@ while not success:
     if elevator == 4:  # must go down
         elevdir = -1
     if elevator == 2 or elevator == 3:
-        elevdir = random.choice(-1,1)   # makes a random choice between up and down
+        elevdir = random.choice([-1, 1])   # makes a random choice between up and down
     for i in range(5):
         if generators[i] == elevator:   # considering only generators that are on the same floor as an elevator
-            genmove[i] = random.choice(0, elevdir)  # choose randomly whether to get on it or not
+            genmove[i] = random.choice([0, elevdir])  # choose randomly whether to get on it or not
         if microchips[i] == elevator:   # considering only microchips that are on the same floor as an elevator
-            micmove[i] = random.choice(0, elevdir)  # choose randomly whether to get on it or not
+            micmove[i] = random.choice([0, elevdir])  # choose randomly whether to get on it or not
     passengers = genmove.count(elevdir) + micmove.count(elevdir)
     if 0 < passengers <= 2:  # if moving parts is between 1 and 2
-        if legalstate(elev + elevdir, generators + genmove, microchips + micmove):  # legal future state test
-            elev += elevdir
+        if legalstate(elevator + elevdir, generators + genmove, microchips + micmove):  # legal future state test
+            elevator += elevdir
             generators += genmove
             microchips += micmove
             totalmoves += 1

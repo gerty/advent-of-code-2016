@@ -20,58 +20,92 @@
 #   a plutonium-compatible microchip.       (M4)
 # The fourth floor contains nothing relevant.
 
-import random
-
 # Tracking variables:
 elevator = 1
 generators = [1, 2, 2, 2, 2]  # locations of each generator
 microchips = [1, 3, 3, 3, 3]  # locations of each microchip
+beenthere = [elevator, generators, microchips]       # keep track of states we have covered without repeating
 genmove = [0, 0, 0, 0, 0]     # movement of each generator
 micmove = [0, 0, 0, 0, 0]     # movement of each microchip
-totalmoves = 0              # tracks total moves in each try
-success = False             # looks for success criteria
-bestmoves = 1000000         # artificially high starting point
-beenthere = [elevator, generators, microchips]       # keep track of states we have covered without repeating
+
+# This next approach will keep track of all of the states that we have already covered. If it reaches a duplicate,
+# it will show it as an invalid move - essentially a wall in a multi-dimensional maze.
+
+# The coded representation of a state will be a list of 3 items: 1 integer and 2 lists of 5 integers each
+# This list will be [elevator floor, [5 floors which G0-G4 are located], [5 floors which M0-M4 are located]]
+# The Generators and Microchips are encoded with G0-G4 and M0-M4 per above in the comments.
+
+# We will have a few helper functions checking states for legality, and one iterative solver function, which will
+# calculate the minimum distance to a solution, much in the way the maze problem was (should have been) solved.
+
+# There is some very helpful info here: https://docs.python.org/2/tutorial/datastructures.html
 
 
-# Checking functions:
+# Checking function for a legal state:
 def legalstate(elev, gens, micros):
-    if [elev, gens, micros] in beenthere:  # covering the "been there" case
-        return False
+    if [elev, gens, micros] in beenthere:
+        return False                # covering the "been there" case
     for x in range(5):
-        if gens[x] != micros[x]:  # if generator is not with its microchip
-            if micros[x] in gens:  # and if microchip floor contains any generators
-                return False                # then cover the invalid due to frying of microchip case
-    if (elev1 < 1) or (elev1 > 4):
-        return False
-    if (elev2 < 1) or (elev2 > 4):
+        if gens[x] != micros[x]:    # if generator is not with its microchip
+            if micros[x] in gens:   # and if microchip floor contains any generators
+                return False        # then we have the "invalid due to frying of microchip" case
+    if (elev < 1) or (elev > 4):
         return False                # covering the invalid floor case
     return True
 
-def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):
-    elevmove = elev2 - elev1
+
+def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):  # Check if a move from state 1 to state 2 is valid
+    if not legalstate(elev2, gens2, mics2):  # Check right away for the valid end state
+        return False           # Get out quickly if state 2 is invalid
+    elevmove = elev2 - elev1  # Capture a positive or negative move of 1 or -1
     gensmove = []
     micsmove = []
-    for x in range(5):
+    for x in range(len(gens1)):
         gensmove.append(gens2[x]-gens1[x])
         micsmove.append(mics2[x]-mics1[x])
-    if gensmove.count(elevmove) + micsmove.count(elevmove) == 0:  # covering the at least one case
+    if gensmove.count(elevmove) + micsmove.count(elevmove) == 0:  # ensuring something has same move as the elevator
         return False
-    if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # covering the no more than two-at-a-time case
+    if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # ensuring no more than two move with the elevator
         return False
-    if gensmove.count(-elevmove) + micsmove.count(-elevmove) > 0:  # covering the all inthe same direction case
+    if gensmove.count(-elevmove) + micsmove.count(-elevmove) > 0:  # ensuring no other moves unless on this elevator
         return False
     return True
 
-#def getdistance(elev, gen, micro):  # Finds the eligible paths forward and iterates
-#    possible = []
-#    for dir in [-1,1]:      # For both directions
-#        for g in range(5):      # For any eligible generators as the first passengers
-#            for m in range(5):  # For any eligible microchips as the first passengers
-#                possible.append([elev+dir, range[0:g] join??]
-#                if .....        # Check for eligibility
+
+def reach(elev, gen, micro):  # Finds the eligible paths forward and iterates, returning number of moves to an answer
+    beenthere.append([elev, gen, micro])  # Record that we have checked this state for possible shortest path
+    minimumpath = None
+    for direction in [-1, 1]:    # For either direction
+        for g in range(5):      # For any eligible generators (for single move) <-- make single/double later
+            g2 = gen
+            g2[g] += direction
+            if legalmove(elev, gen, micro, elev + direction, g2, micro):  # bringing one generator on elevator
+                path = reach(elev + direction, g2, micro)  # check path for valid solution
+                if path and minimumpath:
+                    if minimumpath > path:
+                        minimumpath = path
+                if path and not minimumpath:
+                    minimumpath = path
+
+        for m in range(5):      # For any eligible microchips (for single move) <-- make single/double later
+            m2 = micro
+            m2[m] += direction
+            if legalmove(elev, gen, micro, elev + direction, gen, m2):
+                path = reach(elev + direction, gen, m2)  # check path for valid solution
+                if path and minimumpath:
+                    if minimumpath > path:      # only if solution is produced that is less moves than found so far
+                        minimumpath = path      # this can happen if a previous larger value is found
+                if path and not minimumpath:
+                    minimumpath = path          # or if no minimum path ahs been found on this branch yet
+
+    return minimumpath
 
 
+print(reach(elevator, generators, microchips))
+
+
+# Original failed method below for archiving purposes
+""""
 while not success:
     genmove = [0, 0, 0, 0, 0]  # track movements of the generators
     micmove = [0, 0, 0, 0, 0]  # track movements of the microchips
@@ -114,6 +148,4 @@ while not success:
 # And now after testing I realize that it is not sound at all. Expecting a correct string of guesses to come up
 # randomly is silly. Down to 691 after 5 minutes. Now 371. Need to make this iterative. Even eliminating repeat
 # states doesn't work, since I can't detect a stuck case.
-
-# Pushing this version and starting from scratch.
-
+"""

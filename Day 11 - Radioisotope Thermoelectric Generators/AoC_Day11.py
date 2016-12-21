@@ -31,18 +31,47 @@ micmove = [0, 0, 0, 0, 0]     # movement of each microchip
 totalmoves = 0              # tracks total moves in each try
 success = False             # looks for success criteria
 bestmoves = 1000000         # artificially high starting point
+beenthere = [elevator, generators, microchips]       # keep track of states we have covered without repeating
+
 
 # Checking functions:
 def legalstate(elev, gens, micros):
+    if [elev, gens, micros] in beenthere:  # covering the "been there" case
+        return False
     for x in range(5):
         if gens[x] != micros[x]:  # if generator is not with its microchip
             if micros[x] in gens:  # and if microchip floor contains any generators
-                return False                # then invalid due to frying of microchip
+                return False                # then cover the invalid due to frying of microchip case
+    if (elev1 < 1) or (elev1 > 4):
+        return False
+    if (elev2 < 1) or (elev2 > 4):
+        return False                # covering the invalid floor case
     return True
 
-# Not the efficient or elegant solution, but given the highly constraining rules, I decided to have parts randomly
-# choose whether or not to get on a randomly moving elevator. I will cap the number of moves at the most successful
-# solution, making the number get smaller and smaller as it goes. Well, we'll see...
+def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):
+    elevmove = elev2 - elev1
+    gensmove = []
+    micsmove = []
+    for x in range(5):
+        gensmove.append(gens2[x]-gens1[x])
+        micsmove.append(mics2[x]-mics1[x])
+    if gensmove.count(elevmove) + micsmove.count(elevmove) == 0:  # covering the at least one case
+        return False
+    if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # covering the no more than two-at-a-time case
+        return False
+    if gensmove.count(-elevmove) + micsmove.count(-elevmove) > 0:  # covering the all inthe same direction case
+        return False
+    return True
+
+#def getdistance(elev, gen, micro):  # Finds the eligible paths forward and iterates
+#    possible = []
+#    for dir in [-1,1]:      # For both directions
+#        for g in range(5):      # For any eligible generators as the first passengers
+#            for m in range(5):  # For any eligible microchips as the first passengers
+#                possible.append([elev+dir, range[0:g] join??]
+#                if .....        # Check for eligibility
+
+
 while not success:
     genmove = [0, 0, 0, 0, 0]  # track movements of the generators
     micmove = [0, 0, 0, 0, 0]  # track movements of the microchips
@@ -67,9 +96,9 @@ while not success:
             generators = [x + y for x, y in zip(generators, genmove)]
             microchips = [xx + yy for xx, yy in zip(microchips, micmove)]
             totalmoves += 1
+            beenthere.append([elevator, generators, microchips])
 
     if generators == microchips == [4, 4, 4, 4, 4]:  # if all items are on 4th floor
-        success = True
         print(totalmoves, "as a new minimum number of moves!")
         bestmoves = totalmoves
 
@@ -77,10 +106,14 @@ while not success:
         elevator = 1
         generators = [1, 2, 2, 2, 2]
         microchips = [1, 3, 3, 3, 3]
+        beenthere = [elevator, generators, microchips]
         totalmoves = 0
         print("Best is still:", bestmoves)
 
 # Saving this version without testing for now. General idea might be sound, but more monte carlo than efficient.
+# And now after testing I realize that it is not sound at all. Expecting a correct string of guesses to come up
+# randomly is silly. Down to 691 after 5 minutes. Now 371. Need to make this iterative. Even eliminating repeat
+# states doesn't work, since I can't detect a stuck case.
 
-
+# Pushing this version and starting from scratch.
 

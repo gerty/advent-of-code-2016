@@ -60,20 +60,24 @@ def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):  # Check if a move from
     elevmove = elev2 - elev1  # Capture a positive or negative move of 1 or -1
     gensmove = []
     micsmove = []
+    print(gens1, gens2)
     for x in range(len(gens1)):
         gensmove.append(gens2[x]-gens1[x])
         micsmove.append(mics2[x]-mics1[x])
     if gensmove.count(elevmove) + micsmove.count(elevmove) == 0:  # ensuring something has same move as the elevator
         return False
-    if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # ensuring no more than two move with the elevator
-        return False
-    if gensmove.count(-elevmove) + micsmove.count(-elevmove) > 0:  # ensuring no other moves unless on this elevator
-        return False
+    #if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # ensuring no more than two move with the elevator
+     #   return False
+    #if gensmove.count(-elevmove) + micsmove.count(-elevmove) > 0:  # ensuring no other moves unless on this elevator
+     #   return False
+    print("some legal moves exist")
+
     return True
 
 
 def reach(elev, gen, micro):  # Finds the eligible paths forward, returning number of moves to an answer, or None
     beenthere.append([elev, gen, micro])  # Record that we have checked this state for possible shortest path
+    print(elev, gen, micro)
     minimumpath = None    # Keep track of the min number of steps deep in this branch, so we return the lowest
     for direction in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         g2 = gen  # Mirror list of generators from params
@@ -99,9 +103,7 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
                     minimumpath = path          # if no minimum path has been found on this branch yet
     return minimumpath
 
-
 print(reach(elevator, generators, microchips))
-
 
 # Original failed method below for archiving purposes
 """"

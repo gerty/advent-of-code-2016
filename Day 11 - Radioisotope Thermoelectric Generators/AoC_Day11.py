@@ -80,20 +80,21 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
     print(elev, gen, micro)
     minimumpath = None    # Keep track of the min number of steps deep in this branch, so we return the lowest
     for direction in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
-        g2 = gen  # Mirror list of generators from params
-        m2 = micro  # Mirror list of microchips from params
-        for gm in range(10):      # For any eligible generators (0-4) and microchips (5-9)
-            if gm < 5:
-                g2[gm] += direction     # Make sure the one chosen rides in the right direction (-1 or +1)
-            if gm > 4:
-                m2[gm-5] += direction   # Make sure the one chosen rides in the right direction (-1 or +1)
-            for gm2 in range(10):  # For any eligible generators (0-4) and microchips (5-9)
-                if gm2 < 5:
+        if elev+direction in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
+            for gm in range(10):      # For any eligible generators (0-4) and microchips (5-9)
+            g2 = gen  # Mirror list of generators from params, use this as "delta" state of a moved elevator
+            m2 = micro  # Mirror list of microchips from params, use this as "delta" state of a moved elevator
+            if gm < 5 and gen[gm] == elev:    # if this generator is on the same floor as the elevator
+                g2[gm] += direction     # Assign the "delta" generator floor (-1 or +1)
+            if gm > 4 and micro[gm] == elev:  # if this microchip is on the same floor as the elevator
+                m2[gm-5] += direction   # Assign the "delta" generator floor (-1 or +1)
+            for gm2 in range(10):  # Again (possible second passenger), for eligible generators and microchips
+                if gm2 < 5 and gen[gm2] == elev:  # on the same floor to start?
                     if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
-                        g2[gm2] += direction  # Make sure the one chosen rides in the right direction (-1 or +1)
-                if gm2 > 4:
+                        g2[gm2] += direction  # Assign the "delta" generator floor (-1 or +1)
+                if gm2 > 4 and micro[gm2] == elev:  # on the same floor to start?
                     if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
-                        m2[gm2 - 5] += direction  # # Make sure the one chosen rides in the right direction (-1 or +1)
+                        m2[gm2 - 5] += direction  # Assign the "delta" generator floor (-1 or +1)
             if legalmove(elev, gen, micro, elev + direction, g2, m2):  # Let's go! See if that move would be legal.
                 path = reach(elev + direction, g2, m2)  # check path for valid solution
                 if path and minimumpath:    # path returns None if no path is found - need to check for this case
@@ -104,49 +105,3 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
     return minimumpath
 
 print(reach(elevator, generators, microchips))
-
-# Original failed method below for archiving purposes
-""""
-while not success:
-    genmove = [0, 0, 0, 0, 0]  # track movements of the generators
-    micmove = [0, 0, 0, 0, 0]  # track movements of the microchips
-    if elevator == 1:  # must go up
-        elevdir = 1
-    if elevator == 4:  # must go down
-        elevdir = -1
-    if elevator == 2 or elevator == 3:
-        elevdir = random.choice([-1, 1])   # makes a random choice between up and down
-
-    for i in range(5):
-        if generators[i] == elevator:   # considering only generators that are on the same floor as an elevator
-            genmove[i] = random.choice([0, elevdir])  # choose randomly whether to get on it or not
-        if microchips[i] == elevator:   # considering only microchips that are on the same floor as an elevator
-            micmove[i] = random.choice([0, elevdir])  # choose randomly whether to get on it or not
-
-    if 1 <= genmove.count(elevdir) + micmove.count(elevdir) <= 2:  # if moving parts is between 1 and 2
-        if legalstate(elevator + elevdir,
-                      [x + y for x, y in zip(generators, genmove)],
-                      [xx + yy for xx, yy in zip(microchips, micmove)]):  # legal future state test
-            elevator += elevdir
-            generators = [x + y for x, y in zip(generators, genmove)]
-            microchips = [xx + yy for xx, yy in zip(microchips, micmove)]
-            totalmoves += 1
-            beenthere.append([elevator, generators, microchips])
-
-    if generators == microchips == [4, 4, 4, 4, 4]:  # if all items are on 4th floor
-        print(totalmoves, "as a new minimum number of moves!")
-        bestmoves = totalmoves
-
-    if totalmoves >= bestmoves:  # if we have failed to beat our best score
-        elevator = 1
-        generators = [1, 2, 2, 2, 2]
-        microchips = [1, 3, 3, 3, 3]
-        beenthere = [elevator, generators, microchips]
-        totalmoves = 0
-        print("Best is still:", bestmoves)
-
-# Saving this version without testing for now. General idea might be sound, but more monte carlo than efficient.
-# And now after testing I realize that it is not sound at all. Expecting a correct string of guesses to come up
-# randomly is silly. Down to 691 after 5 minutes. Now 371. Need to make this iterative. Even eliminating repeat
-# states doesn't work, since I can't detect a stuck case.
-"""

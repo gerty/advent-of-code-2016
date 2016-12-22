@@ -42,7 +42,7 @@ micmove = [0, 0, 0, 0, 0]     # movement of each microchip
 
 
 # Checking function for a legal state:
-def legalstate(elev, gens, micros):
+def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
     if [elev, gens, micros] in beenthere:
         return False                # covering the "been there" case
     for x in range(5):
@@ -50,7 +50,7 @@ def legalstate(elev, gens, micros):
             if micros[x] in gens:   # and if microchip floor contains any generators
                 return False        # then we have the "invalid due to frying of microchip" case
     if (elev < 1) or (elev > 4):
-        return False                # covering the invalid floor case
+        return False                # checking for the invalid floor case
     return True
 
 
@@ -72,32 +72,31 @@ def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):  # Check if a move from
     return True
 
 
-def reach(elev, gen, micro):  # Finds the eligible paths forward and iterates, returning number of moves to an answer
+def reach(elev, gen, micro):  # Finds the eligible paths forward, returning number of moves to an answer, or None
     beenthere.append([elev, gen, micro])  # Record that we have checked this state for possible shortest path
-    minimumpath = None
-    for direction in [-1, 1]:    # For either direction
-        for g in range(5):      # For any eligible generators (for single move) <-- make single/double later
-            g2 = gen
-            g2[g] += direction
-            if legalmove(elev, gen, micro, elev + direction, g2, micro):  # bringing one generator on elevator
-                path = reach(elev + direction, g2, micro)  # check path for valid solution
-                if path and minimumpath:
-                    if minimumpath > path:
-                        minimumpath = path
+    minimumpath = None    # Keep track of the min number of steps deep in this branch, so we return the lowest
+    for direction in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
+        g2 = gen  # Mirror list of generators from params
+        m2 = micro  # Mirror list of microchips from params
+        for gm in range(10):      # For any eligible generators (0-4) and microchips (5-9)
+            if gm < 5:
+                g2[gm] += direction     # Make sure the one chosen rides in the right direction (-1 or +1)
+            if gm > 4:
+                m2[gm-5] += direction   # Make sure the one chosen rides in the right direction (-1 or +1)
+            for gm2 in range(10):  # For any eligible generators (0-4) and microchips (5-9)
+                if gm2 < 5:
+                    if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
+                        g2[gm2] += direction  # Make sure the one chosen rides in the right direction (-1 or +1)
+                if gm2 > 4:
+                    if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
+                        m2[gm2 - 5] += direction  # # Make sure the one chosen rides in the right direction (-1 or +1)
+            if legalmove(elev, gen, micro, elev + direction, g2, m2):  # Let's go! See if that move would be legal.
+                path = reach(elev + direction, g2, m2)  # check path for valid solution
+                if path and minimumpath:    # path returns None if no path is found - need to check for this case
+                    if minimumpath > path:      # if path (solution) is produced that is less than minimum found so far
+                        minimumpath = path      # make this number the shortest path to victory
                 if path and not minimumpath:
-                    minimumpath = path
-
-        for m in range(5):      # For any eligible microchips (for single move) <-- make single/double later
-            m2 = micro
-            m2[m] += direction
-            if legalmove(elev, gen, micro, elev + direction, gen, m2):
-                path = reach(elev + direction, gen, m2)  # check path for valid solution
-                if path and minimumpath:
-                    if minimumpath > path:      # only if solution is produced that is less moves than found so far
-                        minimumpath = path      # this can happen if a previous larger value is found
-                if path and not minimumpath:
-                    minimumpath = path          # or if no minimum path ahs been found on this branch yet
-
+                    minimumpath = path          # if no minimum path has been found on this branch yet
     return minimumpath
 
 

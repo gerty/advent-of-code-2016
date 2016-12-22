@@ -60,10 +60,11 @@ def legalmove(elev1, gens1, mics1, elev2, gens2, mics2):  # Check if a move from
     elevmove = elev2 - elev1  # Capture a positive or negative move of 1 or -1
     gensmove = []
     micsmove = []
-    print(gens1, gens2)
+    print(gens1, gens2, mics1, mics2)
     for x in range(len(gens1)):
         gensmove.append(gens2[x]-gens1[x])
         micsmove.append(mics2[x]-mics1[x])
+    print(gensmove, micsmove)
     if gensmove.count(elevmove) + micsmove.count(elevmove) == 0:  # ensuring something has same move as the elevator
         return False
     #if gensmove.count(elevmove) + micsmove.count(elevmove) > 2:  # ensuring no more than two move with the elevator
@@ -82,18 +83,18 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
     for direction in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         if elev+direction in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
             for gm in range(10):      # For any eligible generators (0-4) and microchips (5-9)
-            g2 = gen  # Mirror list of generators from params, use this as "delta" state of a moved elevator
-            m2 = micro  # Mirror list of microchips from params, use this as "delta" state of a moved elevator
+                g2 = gen  # Mirror list of generators from params, use this as "delta" state of a moved elevator
+                m2 = micro  # Mirror list of microchips from params, will use this as "delta" state of a moved elevator
             if gm < 5 and gen[gm] == elev:    # if this generator is on the same floor as the elevator
                 g2[gm] += direction     # Assign the "delta" generator floor (-1 or +1)
-            if gm > 4 and micro[gm] == elev:  # if this microchip is on the same floor as the elevator
-                m2[gm-5] += direction   # Assign the "delta" generator floor (-1 or +1)
+            if gm > 4 and micro[gm - 5] == elev:  # if this microchip is on the same floor as the elevator
+                m2[gm - 5] += direction   # Assign the "delta" generator floor (-1 or +1)
             for gm2 in range(10):  # Again (possible second passenger), for eligible generators and microchips
                 if gm2 < 5 and gen[gm2] == elev:  # on the same floor to start?
                     if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
                         g2[gm2] += direction  # Assign the "delta" generator floor (-1 or +1)
-                if gm2 > 4 and micro[gm2] == elev:  # on the same floor to start?
-                    if gm2 != gm:       # Just in case we choose the same item, don't send it up two floors
+                if gm2 > 4 and micro[gm2 - 5] == elev:  # on the same floor to start?
+                    if gm2 - 5 != gm:       # Just in case we choose the same item, don't send it up two floors
                         m2[gm2 - 5] += direction  # Assign the "delta" generator floor (-1 or +1)
             if legalmove(elev, gen, micro, elev + direction, g2, m2):  # Let's go! See if that move would be legal.
                 path = reach(elev + direction, g2, m2)  # check path for valid solution

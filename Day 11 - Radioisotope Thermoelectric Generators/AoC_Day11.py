@@ -81,7 +81,7 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
     print(elev, gen, micro)
     minimumpath = None    # Keep track of the min number of steps deep in this branch, so we return the lowest
     for direction in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
-        if elev+direction in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
+        if (elev + direction) in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
             for gm in range(10):      # For any eligible generators (0-4) and microchips (5-9)
                 g2 = gen  # Mirror list of generators from params, use this as "delta" state of a moved elevator
                 m2 = micro  # Mirror list of microchips from params, will use this as "delta" state of a moved elevator
@@ -96,7 +96,7 @@ def reach(elev, gen, micro):  # Finds the eligible paths forward, returning numb
                 if gm2 > 4 and micro[gm2 - 5] == elev:  # on the same floor to start?
                     if gm2 - 5 != gm:       # Just in case we choose the same item, don't send it up two floors
                         m2[gm2 - 5] += direction  # Assign the "delta" generator floor (-1 or +1)
-            if legalmove(elev, gen, micro, elev + direction, g2, m2):  # Let's go! See if that move would be legal.
+            if legalstate(elev + direction, g2, m2):  # Let's go! See if that move would be legal.
                 path = reach(elev + direction, g2, m2)  # check path for valid solution
                 if path and minimumpath:    # path returns None if no path is found - need to check for this case
                     if minimumpath > path:      # if path (solution) is produced that is less than minimum found so far

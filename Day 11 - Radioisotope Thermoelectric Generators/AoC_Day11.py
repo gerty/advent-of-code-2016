@@ -39,15 +39,9 @@ beenthere = []       # keep track of states we have covered without repeating
 # There is some very helpful info here: https://docs.python.org/2/tutorial/datastructures.html
 
 
-def historycheck(e, g, m):
-    if [e, g, m] in beenthere:
-        return True
-    return False
-
-
 # This function checks for a legal state:
 def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
-    if historycheck(elev, gens, micros):
+    if [elev, gens, micros] in beenthere:
         return False                # covering the "been there" case
     for x in range(5):
         if gens[x] != micros[x]:    # if generator is not with its microchip
@@ -60,8 +54,6 @@ def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
 def reach(elev, gen, micro):
     if [elev, gen, micro] == [4, [4, 4, 4, 4, 4], [4, 4, 4, 4, 4]]:
         return int(0)
-    if not legalstate(elev, gen, micro):  # See if that move would be legal.
-        return None
     print("Start with:", elev, gen, micro)
     minimumpath = None    # Keep track of the minimum number of steps deep in this branch, so we return the lowest
     for upordown in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
@@ -75,22 +67,21 @@ def reach(elev, gen, micro):
                 if riding > 4 and micro[riding - 5] == elev:  # if riding is a microchip on same floor as elevator
                     m2[riding - 5] += upordown   # Assign the "delta" microchip floor (-1 or +1)
                 for ridingtoo in range(10):  # Possible second passenger, for eligible generators and microchips
-                    print(riding, ridingtoo, elev, gen, micro)
                     if ridingtoo < 5 and gen[ridingtoo] == elev:  # ridingtoo on the same floor as elevator?
                         if ridingtoo != riding:    # Just in case we choose same item, don't send it up two floors
                             g2[ridingtoo] += upordown  # Assign the "delta" generator floor (-1 or +1)
                     if ridingtoo > 4 and micro[ridingtoo - 5] == elev:  # on the same floor as the elevator?
                         if ridingtoo != riding:  # Just in case we choose same item, don't send it up two floors
                             m2[ridingtoo - 5] += upordown  # Assign the "delta" microchip floor (-1 or +1)
-                    if g2 != gen or m2 != micro:
+                    if (g2 != gen or m2 != micro) and legalstate(elev + upordown, g2, m2):
                         print("GO: ", elev + upordown, g2, m2)  # checking with one or two items changed from start
+                        beenthere.append([elev + upordown, g2[:], m2[:]])
                         path = reach(elev + upordown, g2, m2)  # Let's go! Check path for a valid solution.
-                        beenthere.append([elev + upordown, g2, m2])
-                        print("PATH=", path)
+                        print("PATH=", path, minimumpath)
                         if (path is not None) and (minimumpath is None):    # if path returns, a solution exists
                             minimumpath = (path + 1)      # if no minimum path has been found on this branch yet
                         if (path is not None) and (minimumpath is not None):
-                            if minimumpath > (path + 1):  # if solution is produced that is less than minimum found so far
+                            if minimumpath > (path + 1):  # if solution is found that is less than minimum found so far
                                 minimumpath = (path + 1)  # make this number the shortest path to victory
     if minimumpath:
         return minimumpath + 1

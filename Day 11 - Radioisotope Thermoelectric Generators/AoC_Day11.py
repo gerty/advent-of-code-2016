@@ -51,41 +51,56 @@ def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
 
 
 # This function finds the eligible paths forward, returning number of moves to an answer, or None
-def reach(elev, gen, micro):
+def reach(elev, gen, micro, deep):
     if [elev, gen, micro] == [4, [4, 4, 4, 4, 4], [4, 4, 4, 4, 4]]:
+        print("Deep:", deep, gen, micro)
+        enterkey = input("Enter to continue:")
         return int(0)
-    print("Start with:", elev, gen, micro)
+    if deep > 50:  # Capping how deep we go in a search
+        return None
     minimumpath = None    # Keep track of the minimum number of steps deep in this branch, so we return the lowest
     for upordown in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         if (elev + upordown) in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
-            print("Checking on floor", elev + upordown)
             for riding in range(10):      # Generators (0-4) and microchips (5-9) could ride elevator
                 g2 = gen[:]  # g2 is a "delta" state of a moved generator set (COPY it with [:] !!!!)
                 m2 = micro[:]  # m2 is a "delta" state of a moved microchip set (COPY it with [:] !!!!)
+
                 if riding < 5 and gen[riding] == elev:    # if riding is a generator on same floor as elevator
                     g2[riding] += upordown     # Assign the "delta" generator floor (-1 or +1)
+
                 if riding > 4 and micro[riding - 5] == elev:  # if riding is a microchip on same floor as elevator
                     m2[riding - 5] += upordown   # Assign the "delta" microchip floor (-1 or +1)
+
                 for ridingtoo in range(10):  # Possible second passenger, for eligible generators and microchips
+                    g3 = g2[:]  # g3 is the second "delta" state - must reset after each search for 2nd passenger!
+                    m3 = m2[:]  # m3 is the second "delta" state - must reset after each search for 2nd passenger!
+
                     if ridingtoo < 5 and gen[ridingtoo] == elev:  # ridingtoo on the same floor as elevator?
                         if ridingtoo != riding:    # Just in case we choose same item, don't send it up two floors
-                            g2[ridingtoo] += upordown  # Assign the "delta" generator floor (-1 or +1)
+                            g3[ridingtoo] += upordown  # Assign the "delta" generator floor (-1 or +1)
                     if ridingtoo > 4 and micro[ridingtoo - 5] == elev:  # on the same floor as the elevator?
                         if ridingtoo != riding:  # Just in case we choose same item, don't send it up two floors
-                            m2[ridingtoo - 5] += upordown  # Assign the "delta" microchip floor (-1 or +1)
-                    if (g2 != gen or m2 != micro) and legalstate(elev + upordown, g2, m2):
-                        print("GO: ", elev + upordown, g2, m2)  # checking with one or two items changed from start
-                        beenthere.append([elev + upordown, g2[:], m2[:]])
-                        path = reach(elev + upordown, g2, m2)  # Let's go! Check path for a valid solution.
-                        print("PATH=", path, minimumpath)
-                        if (path is not None) and (minimumpath is None):    # if path returns, a solution exists
-                            minimumpath = (path + 1)      # if no minimum path has been found on this branch yet
-                        if (path is not None) and (minimumpath is not None):
-                            if minimumpath > (path + 1):  # if solution is found that is less than minimum found so far
-                                minimumpath = (path + 1)  # make this number the shortest path to victory
-    if minimumpath:
-        return minimumpath + 1
-    return None
-print(beenthere)
+                            m3[ridingtoo - 5] += upordown  # Assign the "delta" microchip floor (-1 or +1)
 
-print(reach(elevator, generators, microchips))
+                    if legalstate(elev + upordown, g3[:], m3[:]):  # removed: (g2 != gen or m2 != micro) and
+                        beenthere.append([elev + upordown, g3[:], m3[:]])
+                        path = reach(elev + upordown, g3[:], m3[:], deep + 1)  # Check path for a valid solution.
+                        print("PATH=", path, minimumpath, gen, micro, "---", g3, m3)
+                        if (path is not None) and (minimumpath is not None):  # if finding an additional solution
+                            if path < minimumpath:  # only replace if it's a better solution
+                                minimumpath = path  # and make minimumpath equal the path just found
+                        if (path is not None) and (minimumpath is None):    # if this is the first solution
+                            minimumpath = path      # no minimum path has been found on this branch yet
+
+    if minimumpath:
+        print("*************************", minimumpath)
+        enterkey = input("Found minpath")
+        return minimumpath
+    return None
+
+print(reach(elevator, generators[:], microchips[:], 0))
+
+# Using a cap of 50 returned 102 as an answer
+# Answer 102 too high.
+# interestingly half of that was how deep we went for an answer: 51, also too high
+# Answer bring returned is consistently twice that of the capped number.

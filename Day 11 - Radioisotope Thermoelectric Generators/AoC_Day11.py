@@ -56,8 +56,11 @@ def reach(elev, gen, micro, deep):
         print("Deep:", deep, gen, micro)
         enterkey = input("Enter to continue:")
         return int(0)
-    if deep > 50:  # Capping how deep we go in a search
+    if deep > 55:  # Capping how deep we go in a search
         return None
+    if deep > sum(gen) + sum(micro):  # Convincing search to lean toward higher values by capping at sum of values.
+            print("BUMP")
+            return None
     minimumpath = None    # Keep track of the minimum number of steps deep in this branch, so we return the lowest
     for upordown in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         if (elev + upordown) in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
@@ -85,12 +88,13 @@ def reach(elev, gen, micro, deep):
                     if legalstate(elev + upordown, g3[:], m3[:]):  # removed: (g2 != gen or m2 != micro) and
                         beenthere.append([elev + upordown, g3[:], m3[:]])
                         path = reach(elev + upordown, g3[:], m3[:], deep + 1)  # Check path for a valid solution.
-                        print("PATH=", path, minimumpath, gen, micro, "---", g3, m3)
-                        if (path is not None) and (minimumpath is not None):  # if finding an additional solution
-                            if path < minimumpath:  # only replace if it's a better solution
-                                minimumpath = path  # and make minimumpath equal the path just found
-                        if (path is not None) and (minimumpath is None):    # if this is the first solution
-                            minimumpath = path      # no minimum path has been found on this branch yet
+                        print("PATH=", path, minimumpath, gen, micro, "---", g3, m3, deep, "deep")
+                        if (path is not None):
+                            if (minimumpath is not None):  # if finding an additional solution
+                                if path < minimumpath:  # only replace if it's a better solution
+                                    minimumpath = path  # and make minimumpath equal the path just found
+                            if (minimumpath is None):    # if this is the first solution
+                                    minimumpath = path      # no minimum path has been found on this branch yet
 
     if minimumpath:
         print("*************************", minimumpath)
@@ -104,3 +108,9 @@ print(reach(elevator, generators[:], microchips[:], 0))
 # Answer 102 too high.
 # interestingly half of that was how deep we went for an answer: 51, also too high
 # Answer bring returned is consistently twice that of the capped number.
+# But, after "fixing the code", and setting the cap at 50, it ran for about 90 minutes and returned None.
+# Adding a watch for how deep the recursion goes showed it hanging at around 50 almost the whole time.
+
+# Found an answer at 39 deep when using the sum of the lists as an indicator of how close the solution was.
+# 39 is wrong. No indication anymore about high or low. 38 is wrong too. Suspicious that these wrong answers are so
+# close to what I choose to cap the recursion at.

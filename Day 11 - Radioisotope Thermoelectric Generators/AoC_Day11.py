@@ -20,11 +20,14 @@
 #   a plutonium-compatible microchip.       (M4)
 # The fourth floor contains nothing relevant.
 
+import collections
+
 # Tracking variables:
 elevator = 1
 generators = [1, 2, 2, 2, 2]  # locations of each generator
 microchips = [1, 3, 3, 3, 3]  # locations of each microchip
 beenthere = []       # keep track of states we have covered without repeating
+beentheresets = ()
 
 # This  approach will keep track of all of the states that we have already covered. If it reaches a duplicate,
 # it will show it as an invalid move - essentially a wall in a multi-dimensional maze.
@@ -39,10 +42,26 @@ beenthere = []       # keep track of states we have covered without repeating
 # There is some very helpful info here: https://docs.python.org/2/tutorial/datastructures.html
 
 
+def isEquivalentState(list1, list2):  # each list is a list of two lists
+    pairs1 = collections.Counter()
+    pairs2 = collections.Counter()
+    for i in range(len(list1[0])):
+        print(list1[0][i], list1[1][i])
+        pairs1[[list1[0][i], list1[1][i]]] += 1  # Create pairs for gens (list1[0]) and micros (list1[1])
+    for i in range(len(list2[0])):
+        pairs2[[list2[0][i], list2[1][i]]] += 1  # Create pairs for gens (list2[0]) and micros (list2[1])
+    if pairs1 == pairs2:
+        return True
+
 # This function checks for a legal state:
 def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
     if [elev, gens, micros] in beenthere:
         return False                # covering the "been there" case
+    for state in beenthere:    # Cut search times by 120x? Look for the "been to equivalent state" condition
+        if elev == state[0]:
+            print(state[1:3], [gens, micros])
+            if isEquivalentState(state[1:3], [gens, micros]):
+                return False
     for x in range(5):
         if gens[x] != micros[x]:    # if generator is not with its microchip
             if micros[x] in gens:   # and if microchip floor contains any generators
@@ -56,11 +75,6 @@ def reach(elev, gen, micro, deep):
         print("Deep:", deep, gen, micro)
         enterkey = input("Enter to continue:")
         return int(0)
-    if deep > 55:  # Capping how deep we go in a search
-        return None
-    if deep > sum(gen) + sum(micro):  # Convincing search to lean toward higher values by capping at sum of values.
-            print("BUMP")
-            return None
     minimumpath = None    # Keep track of the minimum number of steps deep in this branch, so we return the lowest
     for upordown in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         if (elev + upordown) in [1, 2, 3, 4]:  # is our elevator still on a valid floor?

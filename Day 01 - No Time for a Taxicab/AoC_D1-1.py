@@ -33,13 +33,13 @@ def turn (thisway,currentDirection) :
 	else: return 'ERROR'
 	
 
-with open('D1P1input.csv', 'rb') as f:
+with open('D1P1input.csv', 'r') as f:
     reader = csv.reader(f)
     for list in reader:
         gohere = list
 gohere[0] = ' ' + gohere[0]
 for x in gohere:
-	print 'Facing', mydirection, '(about to turn', x[1], 'and go', x[2:], 'spaces)'
+	print ('Facing', mydirection, '(about to turn', x[1], 'and go', x[2:], 'spaces)')
 	mydirection = turn(x[1],mydirection)
 	if mydirection == 'N':	
 		yaxis = yaxis + int(x[2:])
@@ -49,7 +49,7 @@ for x in gohere:
 		yaxis = yaxis - int(x[2:])
 	if mydirection == 'W':	
 		xaxis = xaxis - int(x[2:])
-print 'Finished at location: ', xaxis, ',', yaxis
+print ('Finished at location: ', xaxis, ',', yaxis)
 print (abs(xaxis) + abs(yaxis)), 'away from starting point.'		
 
 

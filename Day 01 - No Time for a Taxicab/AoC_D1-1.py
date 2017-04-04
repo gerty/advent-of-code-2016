@@ -39,7 +39,7 @@ with open('D1P1input.csv', 'r') as f:
         gohere = list
 gohere[0] = ' ' + gohere[0]
 for x in gohere:
-	print ('Facing', mydirection, '(about to turn', x[1], 'and go', x[2:], 'spaces)')
+	print ('Hey look I\'m facing', mydirection, '(about to turn', x[1], 'and go', x[2:], 'spaces)')
 	mydirection = turn(x[1],mydirection)
 	if mydirection == 'N':	
 		yaxis = yaxis + int(x[2:])

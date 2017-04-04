@@ -42,15 +42,15 @@ beentheresets = ()
 # There is some very helpful info here: https://docs.python.org/2/tutorial/datastructures.html
 
 
-def isEquivalentState(list1, list2):  # each list is a list of two lists
+def isEquivalentState(list1, list2):  # each list is a list of two lists. Pair indices of the two lists and collect.
     pairs1 = collections.Counter()
     pairs2 = collections.Counter()
     for i in range(len(list1[0])):
-        print(list1[0][i], list1[1][i])
-        pairs1[[list1[0][i], list1[1][i]]] += 1  # Create pairs for gens (list1[0]) and micros (list1[1])
+        pairs1[tuple([list1[0][i], list1[1][i]])] += 1  # Create pairs for gens (list1[0]) and micros (list1[1])
     for i in range(len(list2[0])):
-        pairs2[[list2[0][i], list2[1][i]]] += 1  # Create pairs for gens (list2[0]) and micros (list2[1])
+        pairs2[tuple([list2[0][i], list2[1][i]])] += 1  # Create pairs for gens (list2[0]) and micros (list2[1])
     if pairs1 == pairs2:
+        print("FOUND PAIRING")
         return True
 
 # This function checks for a legal state:
@@ -59,7 +59,6 @@ def legalstate(elev, gens, micros):   # Sending list of [elev, [gens], [micros]]
         return False                # covering the "been there" case
     for state in beenthere:    # Cut search times by 120x? Look for the "been to equivalent state" condition
         if elev == state[0]:
-            print(state[1:3], [gens, micros])
             if isEquivalentState(state[1:3], [gens, micros]):
                 return False
     for x in range(5):
@@ -74,7 +73,7 @@ def reach(elev, gen, micro, deep):
     if [elev, gen, micro] == [4, [4, 4, 4, 4, 4], [4, 4, 4, 4, 4]]:
         print("Deep:", deep, gen, micro)
         enterkey = input("Enter to continue:")
-        return int(0)
+        return int(1)
     minimumpath = None    # Keep track of the minimum number of steps deep in this branch, so we return the lowest
     for upordown in [-1, 1]:    # For either direction, all go together. Now we need to pick two passengers.
         if (elev + upordown) in [1, 2, 3, 4]:  # is our elevator still on a valid floor?
@@ -98,17 +97,17 @@ def reach(elev, gen, micro, deep):
                     if ridingtoo > 4 and micro[ridingtoo - 5] == elev:  # on the same floor as the elevator?
                         if ridingtoo != riding:  # Just in case we choose same item, don't send it up two floors
                             m3[ridingtoo - 5] += upordown  # Assign the "delta" microchip floor (-1 or +1)
-
-                    if legalstate(elev + upordown, g3[:], m3[:]):  # removed: (g2 != gen or m2 != micro) and
-                        beenthere.append([elev + upordown, g3[:], m3[:]])
-                        path = reach(elev + upordown, g3[:], m3[:], deep + 1)  # Check path for a valid solution.
-                        print("PATH=", path, minimumpath, gen, micro, "---", g3, m3, deep, "deep")
-                        if (path is not None):
-                            if (minimumpath is not None):  # if finding an additional solution
-                                if path < minimumpath:  # only replace if it's a better solution
-                                    minimumpath = path  # and make minimumpath equal the path just found
-                            if (minimumpath is None):    # if this is the first solution
-                                    minimumpath = path      # no minimum path has been found on this branch yet
+                    if (g3 != gen or m3 != micro):
+                        if legalstate(elev + upordown, g3[:], m3[:]):
+                            beenthere.append([elev + upordown, g3[:], m3[:]])
+                            path = reach(elev + upordown, g3[:], m3[:], deep + 1)  # Check path for a valid solution.
+                            print("PATH=", path, minimumpath, gen, micro, "---", g3, m3, deep, "deep")
+                            if (path is not None):
+                                if (minimumpath is not None):  # if finding an additional solution
+                                    if path < minimumpath:  # only replace if it's a better solution
+                                        minimumpath = path  # and make minimumpath equal the path just found
+                                if (minimumpath is None):    # if this is the first solution
+                                        minimumpath = path      # no minimum path has been found on this branch yet
 
     if minimumpath:
         print("*************************", minimumpath)
